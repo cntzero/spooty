@@ -20,9 +20,20 @@ export class YoutubeService {
   constructor(private readonly configService: ConfigService) {}
 
   async findOnYoutubeOne(artist: string, name: string): Promise<string> {
-    this.logger.debug(`Searching ${artist} - ${name} on YT`);
-    const url = (await yts(`${artist} - ${name}`)).videos[0].url;
-    this.logger.debug(`Found ${artist} - ${name} on ${url}`);
+    const query = `${artist} - ${name}`;
+    this.logger.debug(`Searching ${query} on YT using ytdlp-nodejs`);
+
+    const ytdlp = new YtDlp();
+    const result: any = await ytdlp.getInfoAsync(`ytsearch1:${query}` as any);
+
+    const entry = result?.entries?.[0] ?? result;
+
+    if (!entry?.id) {
+      throw new Error(`No YouTube result found for ${query}`);
+    }
+
+    const url = `https://youtube.com/watch?v=${entry.id}`;
+    this.logger.debug(`Found ${query} on ${url}`);
     return url;
   }
 
